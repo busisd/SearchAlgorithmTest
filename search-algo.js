@@ -4,21 +4,20 @@ const arrToInt = (arr) => arr.map((i) => parseInt(i));
 
 var all_char_list = {};
 
-function add_char(cur_char, next_char, pos) {
+function add_char(cur_char, pos) {
   if (!all_char_list[cur_char]) {
-    all_char_list[cur_char] = { [pos]: next_char };
+    let new_char_set = new Set();
+    new_char_set.add(pos);
+    all_char_list[cur_char] = new_char_set;
   } else {
-    all_char_list[cur_char][pos] = next_char;
+    all_char_list[cur_char].add(pos);
   }
 }
 
 function build_char_list(text) {
   all_char_list = {};
-  for (let i = 0; i < text.length - 1; i++) {
-    add_char(text[i], text[i + 1], i);
-  }
-  if (text.length > 0) {
-    add_char(tail(text), "END", text.length - 1);
+  for (let i = 0; i < text.length; i++) {
+    add_char(text[i], i);
   }
 }
 
@@ -45,22 +44,21 @@ function filter_result_set(prev_results_set, new_char_locations) {
   if (
     !prev_results_set ||
     !new_char_locations ||
-    objLen(prev_results_set) == 0
+    prev_results_set.size == 0
   ) {
-    return {};
+    return new Set();
   }
 
-  const new_results = {};
-  for (key of arrToInt(Object.keys(prev_results_set))) {
-    if (new_char_locations[key + 1]) {
-      new_results[key + 1] = new_char_locations[key + 1];
+  const new_results = new Set();
+  for (pos of prev_results_set) {
+    if (new_char_locations.has(pos + 1)) {
+      new_results.add(pos + 1);
     }
   }
   return new_results;
 }
 
 function search_next(new_char) {
-  console.log("new_char: ", new_char);
   if (all_result_sets.length == 0) {
     all_result_sets.push(all_char_list[new_char] || {});
   } else {
@@ -93,7 +91,7 @@ function update_search(new_search_val) {
 search_input.oninput = () => console.log(update_search(search_input.value));
 
 const create_ranges = (result_set) =>
-  arrToInt(Object.keys(result_set)).map((i) => [
+  Array.from(result_set).map((i) => [
     i + 1 - all_result_sets.length,
     i + 1,
   ]);
