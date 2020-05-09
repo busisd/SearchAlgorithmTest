@@ -30,7 +30,6 @@ searchable_content.onchange = () => build_char_list(searchable_content.value.toL
 //Search algorithm
 const search_input = document.getElementById("search-input");
 var all_result_sets = [];
-var cur_search_len = 0;
 
 function filter_result_set(prev_results_set, new_char_locations) {
   if (!prev_results_set || !new_char_locations || objLen(prev_results_set) == 0) {
@@ -47,25 +46,39 @@ function filter_result_set(prev_results_set, new_char_locations) {
 }
 
 function search_next(new_char) {
-  if (cur_search_len == 0) {
+  if (all_result_sets.length == 0) {
     all_result_sets.push(all_char_list[new_char] || {});
   } else {
     all_result_sets.push(filter_result_set(tail(all_result_sets), all_char_list[new_char]));
   }
-  cur_search_len++;
 }
 
 function update_search(new_search_val) {
   //Note: if someone changes the string, this won't work
-  while (new_search_val.length > cur_search_len) {
-    search_next(new_search_val[cur_search_len]);
+  while (new_search_val.length > all_result_sets.length) {
+    search_next(new_search_val[all_result_sets.length]);
   }
 
-  if (new_search_val.length < cur_search_len) {
-    all_result_sets = all_result_sets.slice(0, new_search_val.length);
+  while (new_search_val.length < all_result_sets.length) {
+    all_result_sets.pop();
   }
 
-  return tail(all_result_sets);
+  if (tail(all_result_sets)){
+    highlight_ranges(create_ranges(tail(all_result_sets)));
+    return create_ranges(tail(all_result_sets));
+  } else {
+    highlight_ranges([]);
+    return [];
+  }
 }
 
 search_input.oninput = () => console.log(update_search(search_input.value));
+
+const create_ranges = (result_set) => arrToInt(Object.keys(result_set)).map(i => [i+1-all_result_sets.length, i+1]);
+
+var jquery_content =  $('#searchable-content');
+const highlight_ranges = ranges => jquery_content.highlightWithinTextarea({
+  highlight: ranges
+});
+
+highlight_ranges([]);
